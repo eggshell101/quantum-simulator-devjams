@@ -1,6 +1,7 @@
 # quantum_simulator.py
 import numpy as np
 
+
 n = int(input("Enter the number of qubits: "))
 # Basic single-qubit states
 zero = np.array([[1.0], [0.0]], dtype=complex)
@@ -30,7 +31,7 @@ def kron_list(matrices):
 
 # Common gates (single-qubit)
 X = np.array([[0, 1],
-              [1, 0]], dtype=complex) #state flip or bit flip or not gate for qubit
+              [1, 0]], dtype=complex) #state flip
 
 Y = np.array([[0,-1j],
               [1j ,0]], dtype=complex) #pauli's y gate
@@ -41,6 +42,9 @@ Z = np.array([[1, 0],
 H = (1/np.sqrt(2)) * np.array([[1,  1],
                               [1, -1]], dtype=complex)
 
+
+
+# 2x2 identity
 I = np.eye(2, dtype=complex)
 
 # Build an n-qubit operator that applies `gate` to target_qubit (0 = leftmost / most significant)
@@ -127,6 +131,3 @@ if __name__ == "__main__":
     # Measure once
     outcome, collapsed = measure(s)
     print("Measurement outcome:", outcome)
-    
-U_cnot = cnot_on_n_qubits(control=0, target=2, n_qubits=n)
-print(U_cnot )
