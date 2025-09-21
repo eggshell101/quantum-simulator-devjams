@@ -4,13 +4,13 @@ from Basic_1 import (
     apply_single_qubit_gate,
     cnot_on_n_qubits,
     toffoli_on_n_qubits,
-    H, X, Y, Z
+    H, X, Y, Z,
+    n
 )
 
 def main():
-    n = int(input("Enter the number of qubits: "))
     gates = ["H", "X", "Y", "Z", "CNOT", "TOFFOLI"]
-
+    print('hello from meow meow quantum')
     # initialize |00...0⟩
     s = zero_state(n)
 

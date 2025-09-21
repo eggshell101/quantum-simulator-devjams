@@ -1,7 +1,6 @@
 # quantum_simulator.py
 import numpy as np
 
-print("Enter: ", end="")
 n = int(input("Enter the number of qubits: "))
 # Basic single-qubit states
 zero = np.array([[1.0], [0.0]], dtype=complex)
