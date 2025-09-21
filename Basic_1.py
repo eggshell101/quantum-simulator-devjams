@@ -18,7 +18,6 @@ def zero_state(n):
     state = zero
     for _ in range(n-1):
         state = np.kron(state, zero)
-    print(state)
     return state
 zero_state(n)
 
