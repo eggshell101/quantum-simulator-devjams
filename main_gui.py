@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from gui_version6 import start_quantum_gui, start_quantum_gui_with_bell_state
-from bloch_sphere import show_two_spheres
+from bloch_sphere_2 import run_bloch_simulator
 
 class MainApplication(tk.Tk):
     def __init__(self):
@@ -63,7 +63,7 @@ class MainApplication(tk.Tk):
         start_quantum_gui(self, self.n_qubits)
 
     def open_bloch_sphere(self):
-        show_two_spheres(self) 
+        run_bloch_simulator() 
 
     def open_bell_state(self):
         if self.n_qubits < 2:
