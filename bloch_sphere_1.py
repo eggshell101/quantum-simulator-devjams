@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
+
 # Function to draw Bloch sphere
 def draw_bloch(ax, vector, title):
     # Sphere surface
@@ -39,8 +40,9 @@ def draw_bloch(ax, vector, title):
               ha="center", fontsize=10)
 
 # Function to show Bloch sphere for a gate or qubit state
-def show_bloch(name):
-    new_win = Toplevel(root)
+def show_bloch(parent):
+    new_win = Toplevel(parent)
+    name = parent.winfo_toplevel().title()
     new_win.title(f"{name} - Bloch Sphere")
 
     fig = plt.Figure(figsize=(6,6))
@@ -70,17 +72,18 @@ def show_bloch(name):
     canvas.draw()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-# Tkinter main window
-root = tk.Tk()
-root.title("Quantum Gates - Bloch Sphere Viewer")
-root.geometry("400x400")
+if __name__ == '__main__':
+    
+    root = tk.Tk()
+    root.title("Quantum Gates - Bloch Sphere Viewer")
+    root.geometry("400x400")
 
-tk.Label(root, text="Select a Quantum Gate / Qubit", font=("Arial", 16)).pack(pady=20)
+    tk.Label(root, text="Select a Quantum Gate / Qubit", font=("Arial", 16)).pack(pady=20)
 
-# Buttons for gates and qubits
-for name in ["Hadamard", "Pauli-X", "Pauli-Y", "Pauli-Z", "Qubit - |0>", "Qubit - |1>"]:
-    btn = tk.Button(root, text=name, font=("Arial",14), width=20,
-                    command=lambda n=name: show_bloch(n))
-    btn.pack(pady=5)
+    # Buttons for gates and qubits
+    for name in ["Hadamard", "Pauli-X", "Pauli-Y", "Pauli-Z", "Qubit - |0>", "Qubit - |1>"]:
+        btn = tk.Button(root, text=name, font=("Arial",14), width=20,
+                        command=lambda n=name: show_bloch(n))
+        btn.pack(pady=5)
 
-root.mainloop()
+    root.mainloop()

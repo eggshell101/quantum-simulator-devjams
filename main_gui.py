@@ -63,7 +63,7 @@ class MainApplication(tk.Tk):
         start_quantum_gui(self, self.n_qubits)
 
     def open_bloch_sphere(self):
-        show_two_spheres(self)
+        show_two_spheres(self) 
 
     def open_bell_state(self):
         if self.n_qubits < 2:
