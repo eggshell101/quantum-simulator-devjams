@@ -25,6 +25,7 @@ GATE_SPACING = 30
 
 class Circuit:
     def __init__(self, n_qubits):
+        self.history = []  # list of (gate, probs, targets, controls)
         self.n = n_qubits
         self.state = zero_state(n_qubits)
         self.diagram = []  # list of gate info tuples
@@ -34,6 +35,25 @@ class Circuit:
     def add_gate(self, gate, targets, controls=[]):
         self.diagram.append((gate, targets, controls))
 
+    """def apply_gate(self, index):
+        if index >= len(self.diagram):
+            return
+        gate, targets, controls = self.diagram[index]
+
+        if gate in ["H", "X", "Y", "Z"]:
+            self.state = apply_single_qubit_gate(
+                self.state, {"H": H, "X": X, "Y": Y, "Z": Z}[gate], targets[0], self.n)
+        elif gate == "CNOT":
+            self.state = cnot_on_n_qubits(control=controls[0], target=targets[0], n_qubits=self.n) @ self.state
+        elif gate == "TOFFOLI":
+            self.state = toffoli_on_n_qubits(control1=controls[0], control2=controls[1],
+                                             target=targets[0], n_qubits=self.n) @ self.state
+        elif gate == "MEASURE":
+            q = targets[0]
+            probs = np.abs(self.state.flatten())**2
+            outcome = self.measure_qubit(probs, q)
+            self.measurements[q] = outcome
+            self.state = self.collapse_state(q, outcome)"""
     def apply_gate(self, index):
         if index >= len(self.diagram):
             return
@@ -53,6 +73,11 @@ class Circuit:
             outcome = self.measure_qubit(probs, q)
             self.measurements[q] = outcome
             self.state = self.collapse_state(q, outcome)
+
+        # save probability distribution
+        probs = np.abs(self.state.flatten())**2
+        self.history.append((gate, probs.copy(), targets, controls))
+
 
 
     def measure_qubit(self, probs, qubit):
@@ -83,6 +108,11 @@ class Circuit:
 
 class QuantumGUI:
     def __init__(self, root, circuit: Circuit):
+        self.status_label = tk.Label(root, text="Last Gate Applied: None", 
+                                     bg=BG_COLOR, fg=FG_COLOR, 
+                                     font=(FONT_FAMILY, FONT_SIZE_NORMAL))
+        self.status_label.grid(row=5, column=0, pady=5)
+
         self.root = root
         self.circuit = circuit
         self.root.title("Quantum Circuit Simulator")
@@ -147,7 +177,8 @@ class QuantumGUI:
             ("Reset", self.reset_circuit),
             ("Zoom In (+)", self.zoom_in),
             ("Zoom Out (-)", self.zoom_out),
-            ("Reset Zoom", self.reset_zoom)
+            ("Reset Zoom", self.reset_zoom),
+            ("History", self.history)
         ]
         for i, (text, command) in enumerate(buttons):
             b = tk.Button(self.control_frame, text=text, command=command,
@@ -284,7 +315,7 @@ class QuantumGUI:
         self.update_probabilities()
         self.update_measurements()
 
-    def update_probabilities(self):
+    """def update_probabilities(self):
         self.ax.clear()
         probs = np.abs(self.circuit.state.flatten())**2
         self.ax.bar(range(len(probs)), probs, color=GATE_COLOR)
@@ -293,7 +324,22 @@ class QuantumGUI:
         self.ax.set_xlabel("Basis state", color=FG_COLOR)
         self.ax.set_facecolor(BG_COLOR)
         self.fig.patch.set_facecolor(BG_COLOR)
+        self.prob_canvas.draw()"""
+    def update_probabilities(self):
+        self.ax.clear()
+        probs = np.abs(self.circuit.state.flatten())**2
+        n = self.circuit.n
+        labels = [format(i, f'0{n}b') for i in range(len(probs))]
+
+        self.ax.bar(labels, probs, color=GATE_COLOR)
+        self.ax.set_ylim(0, 1)
+        self.ax.set_ylabel("Probability", color=FG_COLOR)
+        self.ax.set_xlabel("Basis state", color=FG_COLOR)
+        self.ax.set_facecolor(BG_COLOR)
+        self.fig.patch.set_facecolor(BG_COLOR)
+
         self.prob_canvas.draw()
+
 
     def update_measurements(self):
         if self.circuit.measurements:
@@ -302,13 +348,33 @@ class QuantumGUI:
             text = "None"
         self.measure_label.config(text=f"Measurements: {text}")
 
-    def next_gate(self):
+    """def next_gate(self):
         if self.circuit.step_index+1 >= len(self.circuit.diagram):
             messagebox.showinfo("Info", "No more gates to apply.")
             return
         self.circuit.step_index += 1
         self.circuit.apply_gate(self.circuit.step_index)
+        self.update_canvas()"""
+    def next_gate(self):
+        if self.circuit.step_index+1 >= len(self.circuit.diagram):
+            messagebox.showinfo("Info", "No more gates to apply.")
+            return
+        self.circuit.step_index += 1
+        gate, targets, controls = self.circuit.diagram[self.circuit.step_index]
+        self.circuit.apply_gate(self.circuit.step_index)
+
+        # Update status label
+        if gate in ["H", "X", "Y", "Z"]:
+            self.status_label.config(text=f"Last Gate Applied: {gate} on q{targets[0]}")
+        elif gate == "CNOT":
+            self.status_label.config(text=f"Last Gate Applied: CNOT control=q{controls[0]}, target=q{targets[0]}")
+        elif gate == "TOFFOLI":
+            self.status_label.config(text=f"Last Gate Applied: TOFFOLI controls=q{controls[0]},q{controls[1]} target=q{targets[0]}")
+        elif gate == "MEASURE":
+            self.status_label.config(text=f"Last Gate Applied: Measurement on q{targets[0]}")
+
         self.update_canvas()
+
 
     def prev_gate(self):
         if self.circuit.step_index < 0:
@@ -338,6 +404,11 @@ class QuantumGUI:
     def reset_zoom(self):
         self.scale = 1.0
         self.update_canvas()
+    
+    def history(self):
+        from history_viewer import show_history
+        show_history(self.root, self.circuit)
+
 
 
 def start_quantum_gui(parent, n_qubits):
@@ -345,10 +416,11 @@ def start_quantum_gui(parent, n_qubits):
     new_win = tk.Toplevel(parent)
     gui = QuantumGUI(new_win, circuit)
 
-def start_quantum_gui_with_bell_state(parent, n_qubits):
-    circuit = Circuit(n_qubits)
+def start_quantum_gui_with_bell_state(parent, n):
+    circuit = Circuit(n)
     circuit.add_gate("H", targets=[0])
-    circuit.add_gate("CNOT", targets=[1], controls=[0])
+    for i in range(n-1):
+        circuit.add_gate("CNOT", targets=[i+1], controls=[0])
     new_win = tk.Toplevel(parent)
     gui = QuantumGUI(new_win, circuit)
 
